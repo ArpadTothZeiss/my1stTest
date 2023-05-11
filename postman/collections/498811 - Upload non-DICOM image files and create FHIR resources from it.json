@@ -1,0 +1,3004 @@
+{
+	"info": {
+		"_postman_id": "6ab6de6c-571e-463e-80aa-1e07b3230480",
+		"name": "498811 - Upload non-DICOM image files and create FHIR resources from it",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_uid": "26852157-6ab6de6c-571e-463e-80aa-1e07b3230480"
+	},
+	"item": [
+		{
+			"name": "Upload DICOM a single file < 100MB Copy",
+			"item": [
+				{
+					"name": "Get Zeiss Id Device Token Dr Mesirov",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"drMesirovDeviceToken\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"id": "24663509-ea8f-42fa-98b6-7f78986130bf"
+							}
+						}
+					],
+					"id": "e2052d26-999b-4b3b-861d-215efbb82242",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{zeissIdSubscriptionKey}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"eMail\": \"{{drMesirovDeviceEmail}}\",\r\n\"password\": \"{{drMesirovDevicePwd}}\",\r\n\"clientAppId\": \"87\"\r\n}"
+						},
+						"url": {
+							"raw": "https://zeissidapimanagementstage.azure-api.net/V1.0/Device/Authentication/AcquireToken/",
+							"protocol": "https",
+							"host": [
+								"zeissidapimanagementstage",
+								"azure-api",
+								"net"
+							],
+							"path": [
+								"V1.0",
+								"Device",
+								"Authentication",
+								"AcquireToken",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get ZeissId User Token Dr Mesirov Copy 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.collectionVariables.set(\"drMesirovUserToken\", jsonData.id_token);"
+								],
+								"type": "text/javascript",
+								"id": "f0af0ec2-1f20-4fe1-938f-b341c5dab80f"
+							}
+						}
+					],
+					"id": "99516eff-6d2c-412d-9e66-f16146d9c20a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "{{drMesirovUserEmail}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{drMesirovUserPwd}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "openid {{zeissIdClientIdCurie}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{zeissIdClientIdCurie}}",
+									"type": "text"
+								},
+								{
+									"key": "response_type",
+									"value": "id_token",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{zeissIdRopcTokenUrl}}",
+							"host": [
+								"{{zeissIdRopcTokenUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Store file metadata",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"datalakeFileId\", jsonData.fileId);",
+									"pm.collectionVariables.set(\"datalakeUrl\", jsonData.uploadRequest.url);",
+									"",
+									"pm.collectionVariables.set(\"datalakeVersion\", jsonData.uploadRequest.headers[\"x-ms-version\"]);",
+									"pm.collectionVariables.set(\"datalakeContentType\", jsonData.uploadRequest.headers[\"Content-Type\"]);",
+									"pm.collectionVariables.set(\"datalakeContentMD5\", jsonData.uploadRequest.headers[\"Content-MD5\"]);",
+									"pm.collectionVariables.set(\"datalakeContentLength\", jsonData.uploadRequest.headers[\"Content-Length\"]);"
+								],
+								"type": "text/javascript",
+								"id": "bcae0262-58d4-4859-b768-fec9a43d3bf7"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"id": "c412c9dd-cb96-4067-b316-0244261ac6bd"
+							}
+						}
+					],
+					"id": "1801e11c-1600-425e-8f26-1cc1d8ec60ea",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovDeviceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Machine-Id",
+								"type": "text",
+								"value": "ea32c184-2c31-4a17-a277-ae1b6079a437"
+							},
+							{
+								"key": "X-Device-Authentication",
+								"type": "text",
+								"value": "true"
+							},
+							{
+								"key": "If-None-Exist",
+								"value": "true",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"contentType\" : \"image/png\",\n\t\"fileName\" : \"1.2.276.0.75.2.1.20.0.3.120507182257750.35412.29713.jpg\",\n\t\"md5\" : \"L4qfNR+SOWdElOnD78zvAw==\",\n\t\"fileSize\" : 389401\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Store file successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript",
+								"id": "5c9c658f-3577-4576-a6f0-11ba91758b90"
+							}
+						}
+					],
+					"id": "7374f4a0-8f0d-4821-87ff-c531afe4c224",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "x-ms-version",
+								"type": "text",
+								"value": "{{datalakeVersion}}"
+							},
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "{{datalakeContentType}}"
+							},
+							{
+								"key": "Content-Length",
+								"type": "text",
+								"value": "{{datalakeContentLength}}"
+							},
+							{
+								"key": "Content-MD5",
+								"value": "{{datalakeContentMD5}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {}
+						},
+						"url": {
+							"raw": "{{datalakeUrl}}",
+							"host": [
+								"{{datalakeUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete upload successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"id": "8d71a69d-770b-44bc-9c15-b28e77d5d130"
+							}
+						}
+					],
+					"id": "34634774-dc16-4e28-832f-ab326d05eb08",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovDeviceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{subscriptionKey}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Machine-Id",
+								"value": "ea32c184-2c31-4a17-a277-ae1b6079a437",
+								"type": "text"
+							},
+							{
+								"key": "X-Device-Authentication",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file/{{datalakeFileId}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file",
+								"{{datalakeFileId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get single FHIR Media Copy",
+					"id": "fc99c286-bfe0-4f2a-80b8-411716c3896f",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiJodHRwczovL2N6bTA3aGRwY3FhZXV3aGNzLmF6dXJlaGVhbHRoY2FyZWFwaXMuY29tIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvODI5MTNkOTAtODcxNi00MDI1LWE4ZTgtNGY4ZGZhNDJiNzE5LyIsImlhdCI6MTY4MTI5NTA2MiwibmJmIjoxNjgxMjk1MDYyLCJleHAiOjE2ODEyOTk5MjgsImFjciI6IjEiLCJhaW8iOiJBV1FBbS84VEFBQUFRMyttdXhSWVFWNjMzWFRtSHdSTGFTTXFWOW4raDRrVklQMGE0YXdVQTlTaCtjeVlPamNHTlExWjY1alBBd2ppRnVRVzl1MWpBVzNyT20vNWw0OXg4TitEQldQaVk1dkdmUWYwYjl6Wlh2QWZZd1Z3Z3R0WVdPanJYd1BRK2xLdCIsImFsdHNlY2lkIjoiNTo6MTAwMzIwMDFGNzMzMTRFQyIsImFtciI6WyJ3aWEiLCJtZmEiXSwiYXBwaWQiOiIwNGIwNzc5NS04ZGRiLTQ2MWEtYmJlZS0wMmY5ZTFiZjdiNDYiLCJhcHBpZGFjciI6IjAiLCJlbWFpbCI6ImFycGFkLnRvdGhAemVpc3MuY29tIiwiZmFtaWx5X25hbWUiOiJUb3RoIiwiZ2l2ZW5fbmFtZSI6IkFycGFkIiwiaWRwIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvMjgwNDIyNDQtYmI1MS00Y2Q2LTgwMzQtNzc3NmZhMzcwM2U4LyIsImlwYWRkciI6IjE3OC4xNjQuMTgzLjE0MyIsIm5hbWUiOiJUb3RoLCBBcnBhZCIsIm9pZCI6ImU3NTM0MjZmLTdhNzQtNGVkOS05NjBiLTg4NTI3ZmI1ZGQ2ZCIsInB1aWQiOiIxMDAzMjAwMUZCMTA2MTg2IiwicmgiOiIwLkFRc0FrRDJSZ2hhSEpVQ282RS1OLWtLM0dkaDRaMF92V3R4RG9mLXdjM0pMbEpVTEFEOC4iLCJzY3AiOiJ1c2VyX2ltcGVyc29uYXRpb24iLCJzdWIiOiI1Vk4yWHNfWi1qNmNSVDIzVE1SUmwySTVQYi1xY2FWYW8zTzVIbTBINC1zIiwidGlkIjoiODI5MTNkOTAtODcxNi00MDI1LWE4ZTgtNGY4ZGZhNDJiNzE5IiwidW5pcXVlX25hbWUiOiJhcnBhZC50b3RoQHplaXNzLmNvbSIsInV0aSI6IjNpWDRzSGlpeGs2TW8xTm8wdzJPQUEiLCJ2ZXIiOiIxLjAifQ.VeOA71ZW2OATU2qgHt0wN9exM4lXHH4C3uuHt7vtZZ9mcqpBeA904efF0qVVZ3cNjO850HkgkD4osnwc-T1a4zf_X0LiB2QLW91R1HF3Or5xRyvcA_Cs_MBLH2pxut_pzDIEUzRjtxW3ZeFVtC_m18fg3Wyoc9yKShR737RSbXaU5hCEs565uQGHTVtUsbDjD9np0mHsLEmHNWiltOaGbNhHmEPUiJ1ZdhOX0DOMqOg8XBKekQUt-SRUrOhkFTxnrYcjmFAno5jTd5spw3CUbvrZ0H1v9rPQUdWm2t_PiMr_qZPziVI37bPEd2-izWWAi56lp3-LXlH0k7MQDPK-xw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{fhirApiUrl}}/Media?_lastUpdated=gt2023-04-11",
+							"host": [
+								"{{fhirApiUrl}}"
+							],
+							"path": [
+								"Media"
+							],
+							"query": [
+								{
+									"key": "_lastUpdated",
+									"value": "gt2023-04-11"
+								}
+							]
+						},
+						"description": "Get token for FHIR service on QA env:\r\n\r\n`az account get-access-token --resource=https://czm07hdpcqaeuwhcs.azurehealthcareapis.com --query accessToken | xargs`\r\n\r\nEnsure the obejct id of your account is added to to the Healthcare Service you're using."
+					},
+					"response": [
+						{
+							"id": "097ef6cf-4b0d-415d-a05c-8c3b208944f6",
+							"name": "Get single FHIR Media Copy",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fhirApiUrl}}/Media?_lastUpdated=gt2023-04-11",
+									"host": [
+										"{{fhirApiUrl}}"
+									],
+									"path": [
+										"Media"
+									],
+									"query": [
+										{
+											"key": "_lastUpdated",
+											"value": "gt2023-04-11"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/fhir+json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 10:30:04 GMT"
+								},
+								{
+									"key": "Server",
+									"value": "Kestrel"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "X-Request-ID",
+									"value": "d131a500afe3ab4a0810fe430abc856f"
+								},
+								{
+									"key": "x-ms-session-token",
+									"value": "0:-1#15749306"
+								},
+								{
+									"key": "x-ms-request-charge",
+									"value": "3.49"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "SAMEORIGIN"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "frame-src 'self';"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"resourceType\": \"Bundle\",\n    \"id\": \"d131a500afe3ab4a0810fe430abc856f\",\n    \"meta\": {\n        \"lastUpdated\": \"2023-04-12T10:30:05.7292588+00:00\"\n    },\n    \"type\": \"searchset\",\n    \"link\": [\n        {\n            \"relation\": \"self\",\n            \"url\": \"https://czm07hdpcqaeuwhcs.azurehealthcareapis.com/Media?_lastUpdated=gt2023-04-11\"\n        }\n    ],\n    \"entry\": [\n        {\n            \"fullUrl\": \"https://czm07hdpcqaeuwhcs.azurehealthcareapis.com/Media/524a3cb2-5521-42f4-9bf5-779f5ec35528\",\n            \"resource\": {\n                \"resourceType\": \"Media\",\n                \"id\": \"524a3cb2-5521-42f4-9bf5-779f5ec35528\",\n                \"meta\": {\n                    \"versionId\": \"3\",\n                    \"lastUpdated\": \"2023-04-12T07:35:25.1+00:00\",\n                    \"tag\": [\n                        {\n                            \"system\": \"urn:tenantId\",\n                            \"code\": \"1015\"\n                        },\n                        {\n                            \"system\": \"urn:userId\",\n                            \"code\": \"266336\"\n                        }\n                    ]\n                },\n                \"extension\": [\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.dzi+xml\",\n                            \"url\": \"{tileApiUrl}/64365f223dd2e6afe30dc65f/dzi\"\n                        }\n                    },\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.thumbnail+jpeg\",\n                            \"url\": \"{dataLakeFileApiUrl}/64365f313dd2e6afe30dc665\"\n                        }\n                    }\n                ],\n                \"identifier\": [\n                    {\n                        \"system\": \"urn:dataLakeSourceId\",\n                        \"value\": \"64365f223dd2e6afe30dc65f\"\n                    }\n                ],\n                \"status\": \"completed\",\n                \"type\": {\n                    \"coding\": [\n                        {\n                            \"system\": \"http://terminology.hl7.org/CodeSystem/media-type\",\n                            \"code\": \"image\",\n                            \"display\": \"Image\"\n                        }\n                    ]\n                },\n                \"subject\": {\n                    \"reference\": \"Patient/cce715a4-5ff1-45ab-ae27-cb406869f625\"\n                },\n                \"content\": {\n                    \"contentType\": \"image/png\",\n                    \"url\": \"{dataLakeFileApiUrl}/64365f223dd2e6afe30dc65f\"\n                }\n            },\n            \"search\": {\n                \"mode\": \"match\"\n            }\n        },\n        {\n            \"fullUrl\": \"https://czm07hdpcqaeuwhcs.azurehealthcareapis.com/Media/f3441b0d-6873-45e7-8764-ae5f976dd68d\",\n            \"resource\": {\n                \"resourceType\": \"Media\",\n                \"id\": \"f3441b0d-6873-45e7-8764-ae5f976dd68d\",\n                \"meta\": {\n                    \"versionId\": \"3\",\n                    \"lastUpdated\": \"2023-04-12T10:28:58.635+00:00\",\n                    \"tag\": [\n                        {\n                            \"system\": \"urn:tenantId\",\n                            \"code\": \"1015\"\n                        },\n                        {\n                            \"system\": \"urn:userId\",\n                            \"code\": \"266336\"\n                        }\n                    ]\n                },\n                \"extension\": [\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.dzi+xml\",\n                            \"url\": \"{tileApiUrl}/643687aa3dd2e6afe30dc66a/dzi\"\n                        }\n                    },\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.thumbnail+jpeg\",\n                            \"url\": \"{dataLakeFileApiUrl}/643687d63dd2e6afe30dc670\"\n                        }\n                    }\n                ],\n                \"identifier\": [\n                    {\n                        \"system\": \"urn:dataLakeSourceId\",\n                        \"value\": \"643687aa3dd2e6afe30dc66a\"\n                    }\n                ],\n                \"status\": \"completed\",\n                \"type\": {\n                    \"coding\": [\n                        {\n                            \"system\": \"http://terminology.hl7.org/CodeSystem/media-type\",\n                            \"code\": \"image\",\n                            \"display\": \"Image\"\n                        }\n                    ]\n                },\n                \"subject\": {\n                    \"reference\": \"Patient/360fa8c0-b4a6-472a-8578-09fa4e7bf464\"\n                },\n                \"content\": {\n                    \"contentType\": \"image/png\",\n                    \"url\": \"{dataLakeFileApiUrl}/643687aa3dd2e6afe30dc66a\"\n                }\n            },\n            \"search\": {\n                \"mode\": \"match\"\n            }\n        }\n    ]\n}"
+						},
+						{
+							"id": "bbe01bc8-9bc1-4d54-b0e2-743c2df59442",
+							"name": "Get single FHIR Media Copy",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fhirApiUrl}}/Media?_lastUpdated=gt2023-04-11",
+									"host": [
+										"{{fhirApiUrl}}"
+									],
+									"path": [
+										"Media"
+									],
+									"query": [
+										{
+											"key": "_lastUpdated",
+											"value": "gt2023-04-11"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/fhir+json; charset=utf-8"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 12:01:39 GMT"
+								},
+								{
+									"key": "Server",
+									"value": "Kestrel"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "X-Request-ID",
+									"value": "be21ab4ae2b4187150c746ba56739492"
+								},
+								{
+									"key": "x-ms-session-token",
+									"value": "0:-1#15751081"
+								},
+								{
+									"key": "x-ms-request-charge",
+									"value": "3.6"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "SAMEORIGIN"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "frame-src 'self';"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"resourceType\": \"Bundle\",\n    \"id\": \"be21ab4ae2b4187150c746ba56739492\",\n    \"meta\": {\n        \"lastUpdated\": \"2023-04-12T12:01:39.6335348+00:00\"\n    },\n    \"type\": \"searchset\",\n    \"link\": [\n        {\n            \"relation\": \"self\",\n            \"url\": \"https://czm07hdpcqaeuwhcs.azurehealthcareapis.com/Media?_lastUpdated=gt2023-04-11\"\n        }\n    ],\n    \"entry\": [\n        {\n            \"fullUrl\": \"https://czm07hdpcqaeuwhcs.azurehealthcareapis.com/Media/524a3cb2-5521-42f4-9bf5-779f5ec35528\",\n            \"resource\": {\n                \"resourceType\": \"Media\",\n                \"id\": \"524a3cb2-5521-42f4-9bf5-779f5ec35528\",\n                \"meta\": {\n                    \"versionId\": \"3\",\n                    \"lastUpdated\": \"2023-04-12T07:35:25.1+00:00\",\n                    \"tag\": [\n                        {\n                            \"system\": \"urn:tenantId\",\n                            \"code\": \"1015\"\n                        },\n                        {\n                            \"system\": \"urn:userId\",\n                            \"code\": \"266336\"\n                        }\n                    ]\n                },\n                \"extension\": [\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.dzi+xml\",\n                            \"url\": \"{tileApiUrl}/64365f223dd2e6afe30dc65f/dzi\"\n                        }\n                    },\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.thumbnail+jpeg\",\n                            \"url\": \"{dataLakeFileApiUrl}/64365f313dd2e6afe30dc665\"\n                        }\n                    }\n                ],\n                \"identifier\": [\n                    {\n                        \"system\": \"urn:dataLakeSourceId\",\n                        \"value\": \"64365f223dd2e6afe30dc65f\"\n                    }\n                ],\n                \"status\": \"completed\",\n                \"type\": {\n                    \"coding\": [\n                        {\n                            \"system\": \"http://terminology.hl7.org/CodeSystem/media-type\",\n                            \"code\": \"image\",\n                            \"display\": \"Image\"\n                        }\n                    ]\n                },\n                \"subject\": {\n                    \"reference\": \"Patient/cce715a4-5ff1-45ab-ae27-cb406869f625\"\n                },\n                \"content\": {\n                    \"contentType\": \"image/png\",\n                    \"url\": \"{dataLakeFileApiUrl}/64365f223dd2e6afe30dc65f\"\n                }\n            },\n            \"search\": {\n                \"mode\": \"match\"\n            }\n        },\n        {\n            \"fullUrl\": \"https://czm07hdpcqaeuwhcs.azurehealthcareapis.com/Media/f3441b0d-6873-45e7-8764-ae5f976dd68d\",\n            \"resource\": {\n                \"resourceType\": \"Media\",\n                \"id\": \"f3441b0d-6873-45e7-8764-ae5f976dd68d\",\n                \"meta\": {\n                    \"versionId\": \"3\",\n                    \"lastUpdated\": \"2023-04-12T10:28:58.635+00:00\",\n                    \"tag\": [\n                        {\n                            \"system\": \"urn:tenantId\",\n                            \"code\": \"1015\"\n                        },\n                        {\n                            \"system\": \"urn:userId\",\n                            \"code\": \"266336\"\n                        }\n                    ]\n                },\n                \"extension\": [\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.dzi+xml\",\n                            \"url\": \"{tileApiUrl}/643687aa3dd2e6afe30dc66a/dzi\"\n                        }\n                    },\n                    {\n                        \"url\": \"https://simplifier.net/extensionexperiment/resourcereference\",\n                        \"valueAttachment\": {\n                            \"contentType\": \"application/x.thumbnail+jpeg\",\n                            \"url\": \"{dataLakeFileApiUrl}/643687d63dd2e6afe30dc670\"\n                        }\n                    }\n                ],\n                \"identifier\": [\n                    {\n                        \"system\": \"urn:dataLakeSourceId\",\n                        \"value\": \"643687aa3dd2e6afe30dc66a\"\n                    }\n                ],\n                \"status\": \"completed\",\n                \"type\": {\n                    \"coding\": [\n                        {\n                            \"system\": \"http://terminology.hl7.org/CodeSystem/media-type\",\n                            \"code\": \"image\",\n                            \"display\": \"Image\"\n                        }\n                    ]\n                },\n                \"subject\": {\n                    \"reference\": \"Patient/360fa8c0-b4a6-472a-8578-09fa4e7bf464\"\n                },\n                \"content\": {\n                    \"contentType\": \"image/png\",\n                    \"url\": \"{dataLakeFileApiUrl}/643687aa3dd2e6afe30dc66a\"\n                }\n            },\n            \"search\": {\n                \"mode\": \"match\"\n            }\n        },\n        {\n            \"fullUrl\": \"https://czm07hdpcqaeuwhcs.azurehealthcareapis.com/Media/7d8b3491-6cbf-4939-af7d-f34bf7aceb29\",\n            \"resource\": {\n                \"resourceType\": \"Media\",\n                \"id\": \"7d8b3491-6cbf-4939-af7d-f34bf7aceb29\",\n                \"meta\": {\n                    \"versionId\": \"1\",\n                    \"lastUpdated\": \"2023-04-12T12:00:08.444+00:00\",\n                    \"tag\": [\n                        {\n                            \"system\": \"urn:tenantId\",\n                            \"code\": \"1015\"\n                        },\n                        {\n                            \"system\": \"urn:userId\",\n                            \"code\": \"266336\"\n                        }\n                    ]\n                },\n                \"identifier\": [\n                    {\n                        \"system\": \"urn:sourceVideoId\",\n                        \"value\": \"64369d3b3dd2e6afe30dc674\"\n                    }\n                ],\n                \"status\": \"completed\",\n                \"type\": {\n                    \"coding\": [\n                        {\n                            \"system\": \"http://terminology.hl7.org/CodeSystem/media-type\",\n                            \"code\": \"video\",\n                            \"display\": \"Video\"\n                        }\n                    ]\n                },\n                \"subject\": {\n                    \"reference\": \"Patient/360fa8c0-b4a6-472a-8578-09fa4e7bf464\"\n                },\n                \"content\": {\n                    \"contentType\": \"video/mp4\",\n                    \"url\": \"{dataLakeFileApiUrl}/64369d3b3dd2e6afe30dc674\"\n                }\n            },\n            \"search\": {\n                \"mode\": \"match\"\n            }\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Media list for Patient Copy 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"const entries = pm.response.json().entry || [];\r",
+									"const references = entries.map(({ resource }) => {\r",
+									"    const imagingStudy = resource.extension?.[0]?.extension?.find(({ url }) => url === 'imagingStudy')?.valueReference.reference;\r",
+									"    const contentUrl = resource.content.url;\r",
+									"    return { imagingStudy, contentUrl };\r",
+									"});\r",
+									"\r",
+									"const streamReferences = references.filter(({contentUrl}) => contentUrl.includes('video')).map(({contentUrl}) => contentUrl.match(/video\\/stream\\/(.*)/)[1]);\r",
+									"const lastStreamID = streamReferences[streamReferences.length - 1]\r",
+									"console.log({lastStreamID});\r",
+									" pm.collectionVariables.set(\"lastStreamID\", lastStreamID);"
+								],
+								"type": "text/javascript",
+								"id": "6b4de334-3407-4c99-b37e-370c082eaf7c"
+							}
+						}
+					],
+					"id": "34158d02-7d01-47df-8c6c-93d7d74cb95b",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovUserToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{cloudApiUrl}}/fhir/Media?patient={{newPatientIdHouse}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"fhir",
+								"Media"
+							],
+							"query": [
+								{
+									"key": "patient",
+									"value": "{{newPatientIdHouse}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get file metadata",
+					"id": "ccf06dd9-961c-4fb9-8e5f-12bf8fdace01",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovDeviceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{subscriptionKey}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Machine-Id",
+								"value": "ea32c184-2c31-4a17-a277-ae1b6079a437",
+								"type": "text"
+							},
+							{
+								"key": "X-Device-Authentication",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file/{{datalakeFileId}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file",
+								"{{datalakeFileId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create patient with Dr Mesirov",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"console.log(jsonData.entry);\r",
+									"\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.collectionVariables.set(\"newPatientIdHouse\", jsonData.id);"
+								],
+								"type": "text/javascript",
+								"id": "1f4c70ef-fbf9-4423-a638-78a595f3e7b1"
+							}
+						}
+					],
+					"id": "4d6dc052-4c59-499a-b05d-79a47033bc97",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						},
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovUserToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"resourceType\": \"Patient\",\r\n  \"identifier\": [\r\n    {\r\n      \"system\": \"urn:patientId\",\r\n      \"value\": \"498803_acceptance2\"\r\n    }\r\n  ],\r\n  \"name\": [\r\n    {\r\n      \"extension\": [\r\n        {\r\n          \"url\": \"https://simplifier.net/extensionexperiment/namerepresentation\",\r\n          \"valueCode\": \"Alphabetic\"\r\n        }\r\n      ],\r\n      \"use\": \"official\",\r\n      \"family\": \"Simson\",\r\n      \"given\": [\r\n        \"Jason 498811 DEMO\"\r\n      ],\r\n      \"prefix\": [\r\n        \"Dr.\"\r\n      ],\r\n      \"suffix\": [\r\n        \"Jr\"\r\n      ]\r\n    }\r\n  ],\r\n  \"gender\": \"male\",\r\n  \"birthDate\": \"1980-01-01\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{cloudApiUrl}}/fhir/Patient",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"fhir",
+								"Patient"
+							]
+						}
+					},
+					"response": [
+						{
+							"id": "b42099b4-4669-4490-b38f-8956c81ad388",
+							"name": "Create patient with Dr Mesirov",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Ocp-Apim-Subscription-Key",
+										"type": "text",
+										"value": "{{subscriptionKey}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"resourceType\": \"Patient\",\r\n  \"identifier\": [\r\n    {\r\n      \"system\": \"urn:patientId\",\r\n      \"value\": \"498803_acceptance2\"\r\n    }\r\n  ],\r\n  \"name\": [\r\n    {\r\n      \"extension\": [\r\n        {\r\n          \"url\": \"https://simplifier.net/extensionexperiment/namerepresentation\",\r\n          \"valueCode\": \"Alphabetic\"\r\n        }\r\n      ],\r\n      \"use\": \"official\",\r\n      \"family\": \"Simson\",\r\n      \"given\": [\r\n        \"Jason 498811 DEMO\"\r\n      ],\r\n      \"prefix\": [\r\n        \"Dr.\"\r\n      ],\r\n      \"suffix\": [\r\n        \"Jr\"\r\n      ]\r\n    }\r\n  ],\r\n  \"gender\": \"male\",\r\n  \"birthDate\": \"1980-01-01\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{cloudApiUrl}}/fhir/Patient",
+									"host": [
+										"{{cloudApiUrl}}"
+									],
+									"path": [
+										"fhir",
+										"Patient"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Cache-Control",
+									"value": "private"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/fhir+json; charset=utf-8"
+								},
+								{
+									"key": "Request-Context",
+									"value": "appId=cid-v1:adb0e7f7-e2f6-4586-95bc-8da7895ac871"
+								},
+								{
+									"key": "traceparent",
+									"value": "00-e8cf910bda2240a89781eb1d160620ff-0000000000000000-01"
+								},
+								{
+									"key": "requestId",
+									"value": "|8d9c1a452547be4fb522b0b06625b3bd.3ea45b7ec4284631."
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "X-Cache",
+									"value": "CONFIG_NOCACHE"
+								},
+								{
+									"key": "X-Azure-Ref",
+									"value": "0t4I2ZAAAAAB0bCJYda8tTJqURu030nzNQkVSMzBFREdFMDQxMgBmMjQxYjdiMi04N2VhLTQ0ZjAtYWEyYS00YzIwOGI1YTg0OTI="
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 10:06:56 GMT"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"resourceType\": \"Patient\",\n    \"id\": \"360fa8c0-b4a6-472a-8578-09fa4e7bf464\",\n    \"meta\": {\n        \"versionId\": \"1\",\n        \"lastUpdated\": \"2023-04-12T10:06:56.028+00:00\",\n        \"tag\": [\n            {\n                \"system\": \"urn:userId\",\n                \"code\": \"266337\"\n            },\n            {\n                \"system\": \"urn:tenantId\",\n                \"code\": \"1015\"\n            },\n            {\n                \"system\": \"urn:patientHash\",\n                \"version\": \"1\",\n                \"code\": \"rr8093s65UWCKsuNyq9Q0iWyijaZN8IiPS8FZ+QzYZk=\"\n            },\n            {\n                \"system\": \"urn:currentPatientHash\",\n                \"version\": \"1\",\n                \"code\": \"rr8093s65UWCKsuNyq9Q0iWyijaZN8IiPS8FZ+QzYZk=\"\n            },\n            {\n                \"system\": \"urn:patientId\",\n                \"version\": \"1\",\n                \"code\": \"498803_acceptance2\"\n            }\n        ]\n    },\n    \"identifier\": [\n        {\n            \"system\": \"urn:patientId\",\n            \"value\": \"498803_acceptance2\"\n        }\n    ],\n    \"active\": true,\n    \"name\": [\n        {\n            \"extension\": [\n                {\n                    \"url\": \"https://simplifier.net/extensionexperiment/namerepresentation\",\n                    \"valueCode\": \"Alphabetic\"\n                }\n            ],\n            \"use\": \"official\",\n            \"family\": \"Simson\",\n            \"given\": [\n                \"Jason 498811 DEMO\"\n            ],\n            \"prefix\": [\n                \"Dr.\"\n            ],\n            \"suffix\": [\n                \"Jr\"\n            ]\n        }\n    ],\n    \"gender\": \"male\",\n    \"birthDate\": \"1980-01-01\"\n}"
+						}
+					]
+				},
+				{
+					"name": "List Patient",
+					"id": "a2fce565-b502-4b98-b2da-1860d269232b",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovUserToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{subscriptionKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{cloudApiUrl}}/fhir/Patient/{{newPatientIdHouse}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"fhir",
+								"Patient",
+								"{{newPatientIdHouse}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "! Store file metadata",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"datalakeFileId\", jsonData.fileId);",
+									"pm.collectionVariables.set(\"datalakeUrl\", jsonData.uploadRequest.url);",
+									"",
+									"pm.collectionVariables.set(\"datalakeVersion\", jsonData.uploadRequest.headers[\"x-ms-version\"]);",
+									"pm.collectionVariables.set(\"datalakeContentType\", jsonData.uploadRequest.headers[\"Content-Type\"]);",
+									"pm.collectionVariables.set(\"datalakeContentMD5\", jsonData.uploadRequest.headers[\"Content-MD5\"]);",
+									"pm.collectionVariables.set(\"datalakeContentLength\", jsonData.uploadRequest.headers[\"Content-Length\"]);"
+								],
+								"type": "text/javascript",
+								"id": "d5a43aed-6792-488a-acb2-4de08c01136d"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"id": "0567bc35-889f-4459-ad23-344cf41fef10"
+							}
+						}
+					],
+					"id": "39667944-483a-4653-bb64-469245085547",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovDeviceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Machine-Id",
+								"type": "text",
+								"value": "ea32c184-2c31-4a17-a277-ae1b6079a437"
+							},
+							{
+								"key": "X-Device-Authentication",
+								"type": "text",
+								"value": "true"
+							},
+							{
+								"key": "If-None-Exist",
+								"value": "true",
+								"type": "default",
+								"disabled": true
+							},
+							{
+								"key": "x-target-patient-resource-id",
+								"value": "{{newPatientIdHouse}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"contentType\" : \"image/png\",\n\t\"fileName\" : \"1.2.276.0.75.2.1.20.0.3.120507182257750.35412.29712.png\",\n\t\"md5\" : \"pZG6fnR0TttZJ3KqT3wI6A==\",\n\t\"fileSize\" : 3673670\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file"
+							]
+						}
+					},
+					"response": [
+						{
+							"id": "419f567e-9a15-4779-9881-4e0bdd4077fd",
+							"name": "! Store file metadata",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Ocp-Apim-Subscription-Key",
+										"type": "text",
+										"value": "{{subscriptionKey}}"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Machine-Id",
+										"type": "text",
+										"value": "ea32c184-2c31-4a17-a277-ae1b6079a437"
+									},
+									{
+										"key": "X-Device-Authentication",
+										"type": "text",
+										"value": "true"
+									},
+									{
+										"key": "If-None-Exist",
+										"value": "true",
+										"type": "default",
+										"disabled": true
+									},
+									{
+										"key": "x-target-patient-resource-id",
+										"value": "{{newPatientIdHouse}}",
+										"type": "default"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"contentType\" : \"image/png\",\n\t\"fileName\" : \"1.2.276.0.75.2.1.20.0.3.120507182257750.35412.29712.png\",\n\t\"md5\" : \"pZG6fnR0TttZJ3KqT3wI6A==\",\n\t\"fileSize\" : 3673670\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{cloudApiUrl}}/data-lake/file",
+									"host": [
+										"{{cloudApiUrl}}"
+									],
+									"path": [
+										"data-lake",
+										"file"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Cache-Control",
+									"value": "private"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Request-Context",
+									"value": "appId=cid-v1:adb0e7f7-e2f6-4586-95bc-8da7895ac871"
+								},
+								{
+									"key": "traceparent",
+									"value": "00-a2b6a6f8fe9f43329fd578cba7a06db2-0000000000000000-01"
+								},
+								{
+									"key": "requestId",
+									"value": "|0cf2cfcb46287b4685cfac325d6d9bdb.19aaa34457f04943."
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "X-Cache",
+									"value": "CONFIG_NOCACHE"
+								},
+								{
+									"key": "X-Azure-Ref",
+									"value": "0qYc2ZAAAAADNt0aplOzXQoii40ZQKys4QkVSMzBFREdFMDQxNgBmMjQxYjdiMi04N2VhLTQ0ZjAtYWEyYS00YzIwOGI1YTg0OTI="
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 10:27:56 GMT"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"fileId\": \"643687aa3dd2e6afe30dc66a\",\n    \"maxChunkLength\": 104857600,\n    \"uploadRequest\": {\n        \"method\": \"PATCH\",\n        \"url\": \"https://czm07hdpcqaeuwdlake.dfs.core.windows.net/files/1015/643687aa3dd2e6afe30dc66a?action=append&position=0&sv=2018-11-09&spr=https&st=2023-04-12T10%3A26%3A55Z&se=2023-04-12T10%3A42%3A55Z&skoid=ab22ebfc-c94c-4451-901b-1751a990d68d&sktid=82913d90-8716-4025-a8e8-4f8dfa42b719&skt=2023-04-12T10%3A26%3A55Z&ske=2023-04-12T10%3A42%3A55Z&sks=b&skv=2021-12-02&sr=b&sp=aw&sig=5ZDGzv300q9QXI7HY7bG1flot2stfnKAWlU%2FxxF19E8%3D\",\n        \"headers\": {\n            \"Content-Type\": \"image/png\",\n            \"Content-Length\": 3673670,\n            \"x-ms-version\": \"2018-11-09\",\n            \"Content-MD5\": \"pZG6fnR0TttZJ3KqT3wI6A==\"\n        }\n    }\n}"
+						},
+						{
+							"id": "3081cd16-4cf8-43b7-b54d-7b3afb75b453",
+							"name": "! Store file metadata",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Ocp-Apim-Subscription-Key",
+										"type": "text",
+										"value": "{{subscriptionKey}}"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Machine-Id",
+										"type": "text",
+										"value": "ea32c184-2c31-4a17-a277-ae1b6079a437"
+									},
+									{
+										"key": "X-Device-Authentication",
+										"type": "text",
+										"value": "true"
+									},
+									{
+										"key": "If-None-Exist",
+										"value": "true",
+										"type": "default",
+										"disabled": true
+									},
+									{
+										"key": "x-target-patient-resource-id",
+										"value": "{{newPatientIdHouse}}",
+										"type": "default"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"contentType\" : \"video/mp4\",\n\t\"fileName\" : \"callisto_eye_sample_5MB.mp4\",\n\t\"md5\" : \"dIQMWFiKyXHHPBluG9GbMA==\",\n\t\"fileSize\" : 5852115\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{cloudApiUrl}}/data-lake/file",
+									"host": [
+										"{{cloudApiUrl}}"
+									],
+									"path": [
+										"data-lake",
+										"file"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Cache-Control",
+									"value": "private"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Request-Context",
+									"value": "appId=cid-v1:adb0e7f7-e2f6-4586-95bc-8da7895ac871"
+								},
+								{
+									"key": "traceparent",
+									"value": "00-657d287685214439bc85808c6e983ba4-0000000000000000-01"
+								},
+								{
+									"key": "requestId",
+									"value": "|53219228590e45468f75696a8e3e1797.987f94f5a9c25c42."
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "X-Cache",
+									"value": "CONFIG_NOCACHE"
+								},
+								{
+									"key": "X-Azure-Ref",
+									"value": "0M502ZAAAAADPgdv+PORKQY7/CcxG3qPnRlJBMzFFREdFMDQxMQBmMjQxYjdiMi04N2VhLTQ0ZjAtYWEyYS00YzIwOGI1YTg0OTI="
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 11:59:56 GMT"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"fileId\": \"64369d3b3dd2e6afe30dc674\",\n    \"maxChunkLength\": 104857600,\n    \"uploadRequest\": {\n        \"method\": \"PATCH\",\n        \"url\": \"https://czm07hdpcqaeuwdlake.dfs.core.windows.net/files/1015/64369d3b3dd2e6afe30dc674?action=append&position=0&sv=2018-11-09&spr=https&st=2023-04-12T11%3A58%3A55Z&se=2023-04-12T12%3A14%3A55Z&skoid=ab22ebfc-c94c-4451-901b-1751a990d68d&sktid=82913d90-8716-4025-a8e8-4f8dfa42b719&skt=2023-04-12T11%3A58%3A55Z&ske=2023-04-12T12%3A14%3A55Z&sks=b&skv=2021-12-02&sr=b&sp=aw&sig=XgIV43mhc6tcqthcBI6rZsRBxp8nF%2FmlV%2FUeBA28%2BHg%3D\",\n        \"headers\": {\n            \"Content-Type\": \"video/mp4\",\n            \"Content-Length\": 5852115,\n            \"x-ms-version\": \"2018-11-09\",\n            \"Content-MD5\": \"dIQMWFiKyXHHPBluG9GbMA==\"\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "! Store file successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript",
+								"id": "b3e14eb5-5a7c-4799-8d95-8e7d2d56e796"
+							}
+						}
+					],
+					"id": "75996195-29b2-4d5e-96bd-28377cced380",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "x-ms-version",
+								"type": "text",
+								"value": "{{datalakeVersion}}"
+							},
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "{{datalakeContentType}}"
+							},
+							{
+								"key": "Content-Length",
+								"type": "text",
+								"value": "{{datalakeContentLength}}"
+							},
+							{
+								"key": "Content-MD5",
+								"value": "{{datalakeContentMD5}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {}
+						},
+						"url": {
+							"raw": "{{datalakeUrl}}",
+							"host": [
+								"{{datalakeUrl}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"id": "26ed82a5-fe71-449d-9f45-8c73a34d0edc",
+							"name": "! Store file successfully",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "x-ms-version",
+										"type": "text",
+										"value": "{{datalakeVersion}}"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "{{datalakeContentType}}"
+									},
+									{
+										"key": "Content-Length",
+										"type": "text",
+										"value": "{{datalakeContentLength}}"
+									},
+									{
+										"key": "Content-MD5",
+										"value": "{{datalakeContentMD5}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "file",
+									"file": {}
+								},
+								"url": {
+									"raw": "{{datalakeUrl}}",
+									"host": [
+										"{{datalakeUrl}}"
+									]
+								}
+							},
+							"status": "Accepted",
+							"code": 202,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Content-MD5",
+									"value": "pZG6fnR0TttZJ3KqT3wI6A=="
+								},
+								{
+									"key": "Server",
+									"value": "Windows-Azure-HDFS/1.0 Microsoft-HTTPAPI/2.0"
+								},
+								{
+									"key": "x-ms-request-server-encrypted",
+									"value": "true"
+								},
+								{
+									"key": "x-ms-request-id",
+									"value": "9b020555-301f-000c-2229-6d2d3d000000"
+								},
+								{
+									"key": "x-ms-version",
+									"value": "2018-11-09"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 10:28:21 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "0"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						},
+						{
+							"id": "2e68241d-7524-48f9-b063-62c0710c7f95",
+							"name": "! Store file successfully",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "x-ms-version",
+										"type": "text",
+										"value": "{{datalakeVersion}}"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "{{datalakeContentType}}"
+									},
+									{
+										"key": "Content-Length",
+										"type": "text",
+										"value": "{{datalakeContentLength}}"
+									},
+									{
+										"key": "Content-MD5",
+										"value": "{{datalakeContentMD5}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "file",
+									"file": {}
+								},
+								"url": {
+									"raw": "{{datalakeUrl}}",
+									"host": [
+										"{{datalakeUrl}}"
+									]
+								}
+							},
+							"status": "Accepted",
+							"code": 202,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Content-MD5",
+									"value": "dIQMWFiKyXHHPBluG9GbMA=="
+								},
+								{
+									"key": "Server",
+									"value": "Windows-Azure-HDFS/1.0 Microsoft-HTTPAPI/2.0"
+								},
+								{
+									"key": "x-ms-request-server-encrypted",
+									"value": "true"
+								},
+								{
+									"key": "x-ms-request-id",
+									"value": "10b2da70-f01f-0084-2d36-6d2279000000"
+								},
+								{
+									"key": "x-ms-version",
+									"value": "2018-11-09"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 12:00:03 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "0"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "! Complete upload successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"id": "fd4a624c-120f-4e44-a155-93b933612f7d"
+							}
+						}
+					],
+					"id": "d4122966-a8cb-421f-88bf-4a5532eb26b9",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovDeviceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{subscriptionKey}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Machine-Id",
+								"value": "ea32c184-2c31-4a17-a277-ae1b6079a437",
+								"type": "text"
+							},
+							{
+								"key": "X-Device-Authentication",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file/{{datalakeFileId}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file",
+								"{{datalakeFileId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"id": "705c79a2-d81e-42cb-ace7-5409425fcc04",
+							"name": "! Complete upload successfully",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Ocp-Apim-Subscription-Key",
+										"value": "{{subscriptionKey}}",
+										"type": "text"
+									},
+									{
+										"key": "X-Machine-Id",
+										"value": "ea32c184-2c31-4a17-a277-ae1b6079a437",
+										"type": "text"
+									},
+									{
+										"key": "X-Device-Authentication",
+										"value": "true",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{cloudApiUrl}}/data-lake/file/{{datalakeFileId}}",
+									"host": [
+										"{{cloudApiUrl}}"
+									],
+									"path": [
+										"data-lake",
+										"file",
+										"{{datalakeFileId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Cache-Control",
+									"value": "private"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain; charset=utf-8"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Request-Context",
+									"value": "appId=cid-v1:adb0e7f7-e2f6-4586-95bc-8da7895ac871"
+								},
+								{
+									"key": "traceparent",
+									"value": "00-e2bf8b4867f94440a92682d521f644b9-0000000000000000-01"
+								},
+								{
+									"key": "requestId",
+									"value": "|f21f487665b4784a90931b75f19bd05f.3d90fb46fed04106."
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "X-Cache",
+									"value": "CONFIG_NOCACHE"
+								},
+								{
+									"key": "X-Azure-Ref",
+									"value": "01Yc2ZAAAAACoP9BPPDtkS5IsqWZesiVdQkVSMzBFREdFMDQxNgBmMjQxYjdiMi04N2VhLTQ0ZjAtYWEyYS00YzIwOGI1YTg0OTI="
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 10:28:38 GMT"
+								}
+							],
+							"cookie": [],
+							"body": "{\r\n  \"contentType\": \"image/png\",\r\n  \"fileName\": \"1.2.276.0.75.2.1.20.0.3.120507182257750.35412.29712.png\",\r\n  \"md5\": \"pZG6fnR0TttZJ3KqT3wI6A==\",\r\n  \"fileSize\": 3673670,\r\n  \"startUploadTime\": \"2023-04-12T10:27:54.976Z\",\r\n  \"userId\": \"266336\",\r\n  \"tenantId\": \"1015\",\r\n  \"tags\": [\r\n    {\r\n      \"key\": \"technicalPatientId\",\r\n      \"value\": \"360fa8c0-b4a6-472a-8578-09fa4e7bf464\"\r\n    }\r\n  ],\r\n  \"storageSystem\": \"data-lake\",\r\n  \"storageLocationUrl\": \"https://czm07hdpcqaeuwdlake.dfs.core.windows.net/files/1015/643687aa3dd2e6afe30dc66a\",\r\n  \"endUploadTime\": \"2023-04-12T10:28:38.072Z\",\r\n  \"fileId\": \"643687aa3dd2e6afe30dc66a\"\r\n}"
+						},
+						{
+							"id": "ae58a957-93c9-4cee-917a-e6245cf38cbd",
+							"name": "! Complete upload successfully",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Ocp-Apim-Subscription-Key",
+										"value": "{{subscriptionKey}}",
+										"type": "text"
+									},
+									{
+										"key": "X-Machine-Id",
+										"value": "ea32c184-2c31-4a17-a277-ae1b6079a437",
+										"type": "text"
+									},
+									{
+										"key": "X-Device-Authentication",
+										"value": "true",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{cloudApiUrl}}/data-lake/file/{{datalakeFileId}}",
+									"host": [
+										"{{cloudApiUrl}}"
+									],
+									"path": [
+										"data-lake",
+										"file",
+										"{{datalakeFileId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Cache-Control",
+									"value": "private"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain; charset=utf-8"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Request-Context",
+									"value": "appId=cid-v1:adb0e7f7-e2f6-4586-95bc-8da7895ac871"
+								},
+								{
+									"key": "traceparent",
+									"value": "00-c83155f74ed143e1afd86b2c60b477a5-0000000000000000-01"
+								},
+								{
+									"key": "requestId",
+									"value": "|1d2a80ee1d3e00438b8565a4f206854e.81681aee8ea64d53."
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=31536000; includeSubDomains"
+								},
+								{
+									"key": "X-Cache",
+									"value": "CONFIG_NOCACHE"
+								},
+								{
+									"key": "X-Azure-Ref",
+									"value": "0R502ZAAAAAAU2lhrjiAER5pwhtfZ2YjnRlJBMzFFREdFMDQxMQBmMjQxYjdiMi04N2VhLTQ0ZjAtYWEyYS00YzIwOGI1YTg0OTI="
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 12 Apr 2023 12:00:07 GMT"
+								}
+							],
+							"cookie": [],
+							"body": "{\r\n  \"contentType\": \"video/mp4\",\r\n  \"fileName\": \"callisto_eye_sample_5MB.mp4\",\r\n  \"md5\": \"dIQMWFiKyXHHPBluG9GbMA==\",\r\n  \"fileSize\": 5852115,\r\n  \"startUploadTime\": \"2023-04-12T11:59:55.500Z\",\r\n  \"userId\": \"266336\",\r\n  \"tenantId\": \"1015\",\r\n  \"tags\": [\r\n    {\r\n      \"key\": \"technicalPatientId\",\r\n      \"value\": \"360fa8c0-b4a6-472a-8578-09fa4e7bf464\"\r\n    }\r\n  ],\r\n  \"storageSystem\": \"data-lake\",\r\n  \"storageLocationUrl\": \"https://czm07hdpcqaeuwdlake.dfs.core.windows.net/files/1015/64369d3b3dd2e6afe30dc674\",\r\n  \"endUploadTime\": \"2023-04-12T12:00:07.955Z\",\r\n  \"fileId\": \"64369d3b3dd2e6afe30dc674\"\r\n}"
+						}
+					]
+				},
+				{
+					"name": "List Imaging Studies for Patient Copy",
+					"id": "9bd3f0d5-edde-4b84-be52-082dd6fef71e",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovUserToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{subscriptionKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{cloudApiUrl}}/fhir/ImagingStudy?patient={{technicalPatientId}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"fhir",
+								"ImagingStudy"
+							],
+							"query": [
+								{
+									"key": "patient",
+									"value": "{{technicalPatientId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get INACTIVE patient  with Mesirov",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"console.log(jsonData.entry);\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"id": "16c1c3e6-57a5-42e6-b859-bed6ec694a55"
+							}
+						}
+					],
+					"id": "cce6812c-d870-4cfc-98cd-0387240b95e0",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovUserToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{cloudApiUrl}}/fhir/Patient?active=false",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"fhir",
+								"Patient"
+							],
+							"query": [
+								{
+									"key": "active",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get the access Token + stream url for DrMesirov Copy",
+					"id": "a56dc572-64ed-47f2-8aac-d30580d0f4ed",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovUserToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							},
+							{
+								"key": "Ocp-Apim-Trace",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "X-enable-consent-authorization",
+								"value": "true",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{cloudApiUrl}}/video/stream/6304e0f606a834fb36e3d372",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"video",
+								"stream",
+								"6304e0f606a834fb36e3d372"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get download url for DrMesirov Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.collectionVariables.set(\"downloadUrl\", jsonData.downloadUrl);"
+								],
+								"type": "text/javascript",
+								"id": "e144f344-aa28-483b-95ab-8a9dab372952"
+							}
+						}
+					],
+					"id": "dad9370f-4d38-4ad4-b3d4-ecd4f37b58bf",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovUserToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							},
+							{
+								"key": "X-enable-consent-authorization",
+								"value": "true",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file/6304e0f606a834fb36e3d372",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file",
+								"6304e0f606a834fb36e3d372"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "62326a65-e145-4512-9c83-0a4d9cbc39a2"
+		},
+		{
+			"name": "tenant isolation",
+			"item": [
+				{
+					"name": "Get ZeissId User Token Dr House Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.collectionVariables.set(\"drHouseUserToken\", jsonData.id_token);"
+								],
+								"type": "text/javascript",
+								"id": "ea9125ad-e967-4c8b-b5e5-dcfd03272c5b"
+							}
+						}
+					],
+					"id": "12728b45-b93f-4c98-b018-a8feb55deece",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "{{drHouseUserEmail}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{drHouseUserPwd}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "openid {{zeissIdClientIdCurie}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{zeissIdClientIdCurie}}",
+									"type": "text"
+								},
+								{
+									"key": "response_type",
+									"value": "id_token",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{zeissIdRopcTokenUrl}}",
+							"host": [
+								"{{zeissIdRopcTokenUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Zeiss Id Device Token Dr HOUSE",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"drHouseDeviceToken\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"id": "44642186-4d74-47d4-9319-cda6fcddceec"
+							}
+						}
+					],
+					"id": "c9278b84-4bea-4224-aa97-d0198d443d63",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{zeissIdSubscriptionKey}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"eMail\": \"{{drHouseDeviceEmail}}\",\r\n\"password\": \"{{drHouseDevicePwd}}\",\r\n\"clientAppId\": \"87\"\r\n}"
+						},
+						"url": {
+							"raw": "https://zeissidapimanagementstage.azure-api.net/V1.0/Device/Authentication/AcquireToken/",
+							"protocol": "https",
+							"host": [
+								"zeissidapimanagementstage",
+								"azure-api",
+								"net"
+							],
+							"path": [
+								"V1.0",
+								"Device",
+								"Authentication",
+								"AcquireToken",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "! Store file metadata Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"datalakeFileId\", jsonData.fileId);",
+									"pm.collectionVariables.set(\"datalakeUrl\", jsonData.uploadRequest.url);",
+									"",
+									"pm.collectionVariables.set(\"datalakeVersion\", jsonData.uploadRequest.headers[\"x-ms-version\"]);",
+									"pm.collectionVariables.set(\"datalakeContentType\", jsonData.uploadRequest.headers[\"Content-Type\"]);",
+									"pm.collectionVariables.set(\"datalakeContentMD5\", jsonData.uploadRequest.headers[\"Content-MD5\"]);",
+									"pm.collectionVariables.set(\"datalakeContentLength\", jsonData.uploadRequest.headers[\"Content-Length\"]);"
+								],
+								"type": "text/javascript",
+								"id": "bba112da-48fd-469c-aded-336c51b914a7"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"id": "0dd2f9ac-5897-4d93-904b-56a86ae5dc4f"
+							}
+						}
+					],
+					"id": "e66f727b-5d03-45a1-a4ec-a49d3c23a487",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drHouseDeviceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"type": "text",
+								"value": "{{subscriptionKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Machine-Id",
+								"type": "text",
+								"value": "ea32c184-2c31-4a17-a277-ae1b6079a437"
+							},
+							{
+								"key": "X-Device-Authentication",
+								"type": "text",
+								"value": "true"
+							},
+							{
+								"key": "If-None-Exist",
+								"value": "true",
+								"type": "default",
+								"disabled": true
+							},
+							{
+								"key": "x-target-patient-resource-id",
+								"value": "b02145ea-fa57-4288-ac48-3bdcefc993bd",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"contentType\" : \"application/dicom\",\n\t\"fileName\" : \"1.2.276.0.75.2.5.30.20.3.230315184722302.244123917165179.1257282.dcm\",\n\t\"md5\" : \"7n4OgSZJogALsSi2motKIw==\",\n\t\"fileSize\" : 1985848\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "! Store file successfully Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript",
+								"id": "ac2e5ea7-9a66-4d28-a77b-45a235e016f2"
+							}
+						}
+					],
+					"id": "c1567326-6846-40b3-801d-7175acb64489",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "x-ms-version",
+								"type": "text",
+								"value": "{{datalakeVersion}}"
+							},
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "{{datalakeContentType}}"
+							},
+							{
+								"key": "Content-Length",
+								"type": "text",
+								"value": "{{datalakeContentLength}}"
+							},
+							{
+								"key": "Content-MD5",
+								"value": "{{datalakeContentMD5}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {}
+						},
+						"url": {
+							"raw": "{{datalakeUrl}}",
+							"host": [
+								"{{datalakeUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "! Complete upload successfully Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"id": "e93f8035-f6b7-49fa-a292-e838ab504f3f"
+							}
+						}
+					],
+					"id": "d60b32c1-9cfc-485f-8ae8-9cf727ac1745",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{drMesirovDeviceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{subscriptionKey}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Machine-Id",
+								"value": "ea32c184-2c31-4a17-a277-ae1b6079a437",
+								"type": "text"
+							},
+							{
+								"key": "X-Device-Authentication",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{cloudApiUrl}}/data-lake/file/{{datalakeFileId}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"data-lake",
+								"file",
+								"{{datalakeFileId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get ZeissId User Token Dr House Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.collectionVariables.set(\"drHouseUserToken\", jsonData.id_token);"
+								],
+								"type": "text/javascript",
+								"id": "f6dc04f9-b5ed-42a7-ad58-0a5a5689cf3b"
+							}
+						}
+					],
+					"id": "4bf48214-51e8-4d20-a8ad-77da58d498f9",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "{{drHouseUserEmail}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{drHouseUserPwd}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "openid {{zeissIdClientIdCurie}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{zeissIdClientIdCurie}}",
+									"type": "text"
+								},
+								{
+									"key": "response_type",
+									"value": "id_token",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{zeissIdRopcTokenUrl}}",
+							"host": [
+								"{{zeissIdRopcTokenUrl}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "38e2de4a-7148-4e11-bda9-8d8ef904ec58"
+		},
+		{
+			"name": "Get patient list search for name Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"console.log(jsonData.entry);\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"id": "bff66aec-3c43-4ffd-991f-1450302b7309"
+					}
+				}
+			],
+			"id": "77d83e87-6f67-45e1-b7b5-da16e52810b7",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{drMesirovUserToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Ocp-Apim-Subscription-Key",
+						"type": "text",
+						"value": "{{subscriptionKey}}"
+					}
+				],
+				"url": {
+					"raw": "{{cloudApiUrl}}/fhir/Patient?name=Ufi",
+					"host": [
+						"{{cloudApiUrl}}"
+					],
+					"path": [
+						"fhir",
+						"Patient"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "Ufi"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"const tokenUrl = pm.environment.get(\"AZURE_ID_ACQUIRE_TOKEN_URL\");",
+					"const clientSecret = pm.environment.get('fhir_native_aadapp_clientsecret');",
+					"const clientid = pm.environment.get('fhir_native_client_id');",
+					"const audience = pm.environment.get('fhir_native_aadapp_audience');",
+					"",
+					"const req =",
+					"{",
+					"    url: tokenUrl,",
+					"    method: 'POST',",
+					"    header: { 'Content-Type': 'application/json' },",
+					"    body: {",
+					"          mode: 'urlencoded',",
+					"          urlencoded: [",
+					"            {key: 'client_id', value: clientid},",
+					"            {key: 'resource', value: audience},",
+					"            {key: 'client_secret', value: clientSecret},",
+					"            {key: 'grant_type', value: 'client_credentials'}",
+					"        ]",
+					"      }",
+					"}",
+					"pm.sendRequest(req, function (err, response) {",
+					"    const tokenResponse = response.json();",
+					"    console.log('Got token response', tokenResponse);",
+					"    pm.collectionVariables.set('AZURE_ACCESS_TOKEN', tokenResponse.access_token);",
+					"});"
+				],
+				"id": "029cb54b-7cd7-427b-98e8-824e9580d2ff"
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				],
+				"id": "ec78bedf-4128-4f0a-aa53-9edb5ba8a3c3"
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "c0dbf8bb-b742-448d-ab01-cbe0ac0913f2",
+			"key": "zeissIdRopcTokenUrl",
+			"value": "https://id-ip-stage.zeiss.com/OAuth/oauth2/v2.0/token?p=B2C_1A_ZeissIdRopcSignIn"
+		},
+		{
+			"id": "db62df75-a681-4ffe-a946-af705545054c",
+			"key": "zeissIdClientIdCurie",
+			"value": "e22a35cd-683a-4e6f-8994-d0d7703c03bd"
+		},
+		{
+			"id": "fbc37523-b8b0-453b-9c9b-6a5b6823ac22",
+			"key": "zeissIdSubscriptionKey",
+			"value": "0db8d4931d904e73b016bfb6d08011e0"
+		},
+		{
+			"id": "110192a0-8718-4418-b1ef-2f2bbbb10890",
+			"key": "drHouseUserEmail",
+			"value": "dr-house@id.zeiss.com"
+		},
+		{
+			"id": "14720452-d819-4cb6-9db7-757c354e40f1",
+			"key": "drHouseUserPwd",
+			"value": "drHouseUser123"
+		},
+		{
+			"id": "c35627da-9b33-4f46-80d7-32422ed9972a",
+			"key": "drHouseDeviceEmail",
+			"value": "dr-house-device@id.zeiss.com"
+		},
+		{
+			"id": "c5901bc8-3b18-4d91-b85b-0b13b3bc8053",
+			"key": "drHouseDevicePwd",
+			"value": "drHouseDev123"
+		},
+		{
+			"id": "c4071064-8edb-40c8-8523-03e43a3bf0bb",
+			"key": "drMesirovUserEmail",
+			"value": "dr-mesirov@id.zeiss.com"
+		},
+		{
+			"id": "a0556fcc-942b-4237-a185-0d2c1bdf38f6",
+			"key": "drMesirovUserPwd",
+			"value": "drMesirovUser123"
+		},
+		{
+			"id": "c0ff922a-0a50-4cfe-a01d-0d40593cf95c",
+			"key": "drMesirovDeviceEmail",
+			"value": "dr-mesirov-device@id.zeiss.com"
+		},
+		{
+			"id": "14398fc2-eeeb-4884-b2f8-4838e897e1de",
+			"key": "drMesirovDevicePwd",
+			"value": "drMesirovDev123"
+		},
+		{
+			"id": "5aac24d8-2973-4205-bb4d-fe74890da864",
+			"key": "drHadleyUserEmail",
+			"value": "dr-hadley@id.zeiss.com"
+		},
+		{
+			"id": "a59f7485-cc94-4f34-a17a-c3c3e7365114",
+			"key": "drHadleyUserPwd",
+			"value": "drHadleyUser123"
+		},
+		{
+			"id": "c69b3105-4744-444a-94a9-32ba2aa8b633",
+			"key": "drHadleyDeviceEmail",
+			"value": "dr-hadley-device@id.zeiss.com"
+		},
+		{
+			"id": "a3bea541-0c1a-4abc-83f5-98570b271d7d",
+			"key": "drHadleyDevicePwd",
+			"value": "drHadleyDev123"
+		},
+		{
+			"id": "bf91d431-89e0-4a89-882c-003e00cb1962",
+			"key": "drCuddyUserEmail",
+			"value": "dr-cuddy@id.zeiss.com"
+		},
+		{
+			"id": "6ba47120-8978-4eff-8da5-3f458ec960d2",
+			"key": "drCuddyUserPwd",
+			"value": "drCuddyUser123"
+		},
+		{
+			"id": "7468fe01-ecd7-4eb4-bf02-ee87e58b0a21",
+			"key": "drHouseDeviceToken",
+			"value": null
+		},
+		{
+			"id": "78d084b0-7b07-45ee-80d5-3ad79c8b083e",
+			"key": "drMesirovUserToken",
+			"value": ""
+		},
+		{
+			"id": "45157e05-1c80-4ca1-92e0-77d99cbab473",
+			"key": "drMesirovDeviceToken",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Im5PbzNaRHJPRFhFSzFqS1doWHNsSFJfS1hFZyIsImtpZCI6Im5PbzNaRHJPRFhFSzFqS1doWHNsSFJfS1hFZyJ9.eyJhdWQiOiJodHRwczovL2dyYXBoLndpbmRvd3MubmV0IiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvNDgzZjQ0OWItNmEwZC00MzU0LWI3ZTctMzcxMTNlN2Q0Y2ExLyIsImlhdCI6MTYxMzk5MzIwMCwibmJmIjoxNjEzOTkzMjAwLCJleHAiOjE2MTM5OTcxMDAsImFjciI6IjEiLCJhaW8iOiJFMlpnWUtnSTRWcjVSQ0NucTRDcnFlZlVYN3Vwd2gzcmV3NU1xZHZMdmo2YnBXTjlJRGNBIiwiYW1yIjpbInB3ZCJdLCJhcHBpZCI6IjFkZWQ5NGQxLWNiM2ItNDQwOS04MWFiLWYxYzViMjJjMzhhMiIsImFwcGlkYWNyIjoiMSIsImZhbWlseV9uYW1lIjoiLSIsImdpdmVuX25hbWUiOiJkci1tZXNpcm92LWRldmljZSIsImlwYWRkciI6IjUxLjE0NC4yMzkuMTc2IiwibmFtZSI6ImRyLW1lc2lyb3YtZGV2aWNlIC0iLCJvaWQiOiI1MDNkZDkyMi1iZmIwLTQ5YzMtYjdkNC0yNGRjZDFlYjIxNDEiLCJwdWlkIjoiMTAwMzIwMDBDNEU1MjkwMSIsInJoIjoiMC5BQUFBbTBRX1NBMXFWRU8zNXpjUlBuMU1vZEdVN1IwN3l3bEVnYXZ4eGJJc09LSWpBTkkuIiwic2NwIjoiRGlyZWN0b3J5LkFjY2Vzc0FzVXNlci5BbGwgRGlyZWN0b3J5LlJlYWRXcml0ZS5BbGwgVXNlci5SZWFkIiwic3ViIjoib2E5VVhnOUZXd2ROM1kwTDBpRmF2Zk1sdGEtNElORXM3eGFMbjZjYktNTSIsInRlbmFudF9yZWdpb25fc2NvcGUiOiJFVSIsInRpZCI6IjQ4M2Y0NDliLTZhMGQtNDM1NC1iN2U3LTM3MTEzZTdkNGNhMSIsInVuaXF1ZV9uYW1lIjoiNTAzZGQ5MjItYmZiMC00OWMzLWI3ZDQtMjRkY2QxZWIyMTQxQFpFSVNTSURCMkNTVEFHRS5vbm1pY3Jvc29mdC5jb20iLCJ1cG4iOiI1MDNkZDkyMi1iZmIwLTQ5YzMtYjdkNC0yNGRjZDFlYjIxNDFAWkVJU1NJREIyQ1NUQUdFLm9ubWljcm9zb2Z0LmNvbSIsInV0aSI6Im5IZmNCMVQ5NkVTZndaU3lLZzQ1QUEiLCJ2ZXIiOiIxLjAifQ.M8NKNm0xgqO4EL4Suamz6Zv-cKhWdPsSUIZxeVBXWdCrY9RWzU0OO-jr72Selu_ZE2fgnMkvOoR07_2wDnizVmqXKP3gky0PacGXnn_TXU-I0yBTlnlVe7-Ix9xT9qHpKP2reETInDvgacb75NwZfyU4aI-kouXvAuXHQBi59365nOOUCaiHqMXAnMg0hpjN6U7_LyUD4WMNycRkJf-kf5hrueTO9rPUfHP1f-e2AHgsFDx0DWz47U0O0nrD60owFQDa1O8xL0-FZsKIA9UnYz50K2jyupI_bGqP3tw8Ec3y6U6jeMlULzuPgcGJM1s2A2ixwK5d8hhQugbueIz49w"
+		},
+		{
+			"id": "e6badac4-e202-40f2-9c90-3029ce1d9d21",
+			"key": "drHadleyDeviceToken",
+			"value": ""
+		},
+		{
+			"id": "4e174056-20eb-4e55-a1e9-ee4a52aa737d",
+			"key": "drCuddyUserToken",
+			"value": ""
+		},
+		{
+			"id": "6b85c68a-e490-4f06-a349-f65376620d3d",
+			"key": "drHouseUserToken",
+			"value": ""
+		},
+		{
+			"id": "4876fcc7-2039-477d-91f0-186aca2d9c32",
+			"key": "drHadleyUserToken",
+			"value": ""
+		},
+		{
+			"id": "c746eeba-72fb-4dc5-a9ae-21bc105c0d12",
+			"key": "downloadUrl",
+			"value": ""
+		},
+		{
+			"id": "f5ee1e23-bde1-4579-8f43-03d825fffa4a",
+			"key": "patientId",
+			"value": ""
+		},
+		{
+			"id": "89d0c5dc-34d9-4294-8594-4358251118a9",
+			"key": "fileId",
+			"value": ""
+		},
+		{
+			"id": "2efc0a32-3a49-4fd8-8445-735d3ca9d058",
+			"key": "documentId",
+			"value": ""
+		},
+		{
+			"id": "b0c70fc2-65f5-478b-852b-217beb496515",
+			"key": "consentIdDrMesirovDatalake",
+			"value": ""
+		},
+		{
+			"id": "455c7541-d6aa-4998-8d98-01636e946296",
+			"key": "consentIdDrCuddyDatalake",
+			"value": ""
+		},
+		{
+			"id": "b833b8df-733b-4392-afb7-3b0887defa10",
+			"key": "consentIdDrMesirovFhir",
+			"value": ""
+		},
+		{
+			"id": "4234bb74-1d58-4764-a9ec-086556c7228e",
+			"key": "consentIdDrCuddyFhir",
+			"value": ""
+		},
+		{
+			"id": "a26177c4-304f-4594-9bea-55aa0aa59ebc",
+			"key": "consentIdDrMesirovFhirFiltered1",
+			"value": ""
+		},
+		{
+			"id": "6c0a344b-b29b-4983-a593-4fe98d41e81c",
+			"key": "consentIdDrMesirovFhirFiltered2",
+			"value": ""
+		},
+		{
+			"id": "dc32b35e-8a70-425c-97ee-05ea850539a9",
+			"key": "consentIdDrMesirovFhirFiltered3",
+			"value": ""
+		},
+		{
+			"id": "3f47a490-e925-488c-890a-efe7bf85a17f",
+			"key": "thumbnailId",
+			"value": ""
+		},
+		{
+			"id": "6c6ff59f-5cee-4f5e-ad6e-e786ecabd6a9",
+			"key": "consentIdDrMesirovImageTile",
+			"value": ""
+		},
+		{
+			"id": "e43cf744-ae36-460a-acf2-8a3789a99c6b",
+			"key": "consentIdDrCuddyImageTile",
+			"value": ""
+		},
+		{
+			"id": "0ba6001c-8927-4fd4-a6c1-c9504b0242e2",
+			"key": "drMarkovUserEmail",
+			"value": "dr-markov@id.zeiss.com"
+		},
+		{
+			"id": "078fc255-5628-4a08-a8c7-c43ee894b434",
+			"key": "drMarkovUserPwd",
+			"value": "drMarkovUser123"
+		},
+		{
+			"id": "f4a9a958-c757-46c6-bf79-2f32330e2dba",
+			"key": "drMarkovUserToken",
+			"value": ""
+		},
+		{
+			"id": "8ea780ec-3a18-43ba-a17c-604afb794dfb",
+			"key": "datalakeFileId",
+			"value": "60339672a7904816fce16085"
+		},
+		{
+			"id": "cd45b8ef-f85f-4360-81d9-10f302e4b535",
+			"key": "datalakeAuthorization",
+			"value": "SharedKey czm07hdpcqaeuwdlake:z1uWWKXmECJke8Co3j7PX+SSfMwl9mSJVQwR7PDeX2M="
+		},
+		{
+			"id": "767eaeb2-7b33-42e1-a794-647c3ee15913",
+			"key": "datalakeContentLength",
+			"value": "353236"
+		},
+		{
+			"id": "4125000b-0881-4c5b-8d6a-2bc356dbc864",
+			"key": "datalakeContentType",
+			"value": "image/png"
+		},
+		{
+			"id": "0633c7dc-ce7c-43b7-933e-7bb710b8e5ff",
+			"key": "datalakeDate",
+			"value": "Mon, 22 Feb 2021 11:33:07 GMT"
+		},
+		{
+			"id": "650b6481-bdc6-4859-90e8-3a4d3bd1c15c",
+			"key": "datalakeUrl",
+			"value": "https://czm07hdpcqaeuwdlake.dfs.core.windows.net/files/1015/60339672a7904816fce16085?action=append&position=0"
+		},
+		{
+			"id": "a244c61c-6c0f-494a-816e-714a8227a98b",
+			"key": "datalakeVersion",
+			"value": "2018-11-09"
+		},
+		{
+			"id": "2b8ca8da-520b-4542-99e7-c1b44335a8ea",
+			"key": "datalakeContentMD5",
+			"value": "LhGVcdfMWlGCTnr33ELjtQ=="
+		},
+		{
+			"id": "24d87164-b42a-4654-9987-b6973d14af9e",
+			"key": "revokeTokenDrMesirovDatalake",
+			"value": ""
+		},
+		{
+			"id": "5dba28c0-c8f7-40cc-8df3-6534074e529b",
+			"key": "revokeTokenDrMesirovImagingStudy",
+			"value": ""
+		},
+		{
+			"id": "fdabe700-f370-4f2c-886d-625affb6df32",
+			"key": "revokeTokenDrCuddyDatalake",
+			"value": ""
+		},
+		{
+			"id": "c170ba73-c280-4b0f-b162-4f3c29048044",
+			"key": "revokeTokenDrCuddyImagingStudy",
+			"value": ""
+		},
+		{
+			"id": "a5604c1d-959c-4448-bf1a-d98f229838d6",
+			"key": "revokeTokenDrMesirovImageTile",
+			"value": ""
+		},
+		{
+			"id": "0cfbe75b-d829-4468-8a2b-85a2eeae59a5",
+			"key": "count",
+			"value": ""
+		},
+		{
+			"id": "f11beef2-1e97-4f45-98ec-cff9a9008829",
+			"key": "sourcePatientId",
+			"value": ""
+		},
+		{
+			"id": "37cf48aa-a3d8-4a5b-90c2-d6dcb5a3ff90",
+			"key": "targetPatientId",
+			"value": ""
+		},
+		{
+			"id": "8695cf06-8cb7-43f3-bf2c-110e3f602bff",
+			"key": "otherSourcePatientId",
+			"value": ""
+		},
+		{
+			"id": "dc6ec5da-a554-4b7d-864e-46a9d8aed820",
+			"key": "newPatientIdHouse",
+			"value": ""
+		},
+		{
+			"id": "4d7ab4b1-04ff-42a5-aa95-aaa0ab9bc6c6",
+			"key": "newPatientIdMesirov",
+			"value": ""
+		},
+		{
+			"id": "742136af-6c08-429b-8279-49cf0d9bb255",
+			"key": "imagingStudyId",
+			"value": ""
+		},
+		{
+			"id": "3dacfd9d-502a-44fc-904a-547374796420",
+			"key": "lastStreamID",
+			"value": ""
+		},
+		{
+			"id": "ff33040f-408d-4533-b448-1ed97bdf9469",
+			"key": "patientIdInst",
+			"value": ""
+		},
+		{
+			"id": "79e64006-765f-42ca-bad9-76641c450256",
+			"key": "patientIdSF",
+			"value": ""
+		},
+		{
+			"id": "350e7214-b921-425b-a2a1-f477991bc0ba",
+			"key": "activePatientId",
+			"value": ""
+		},
+		{
+			"id": "86cd5c4e-1329-4f2a-a84f-e3f77ad5be47",
+			"key": "mesirovUserToken",
+			"value": ""
+		},
+		{
+			"id": "f2755035-fd91-40cd-abf5-d1857a7787c4",
+			"key": "drHousePatientId",
+			"value": ""
+		},
+		{
+			"id": "54727e17-5273-48ab-a188-77a9aa334be6",
+			"key": "drMesirovPatientId",
+			"value": ""
+		},
+		{
+			"id": "970114f1-0877-4837-9468-5466b688b026",
+			"key": "drMesirovLocationId",
+			"value": ""
+		},
+		{
+			"id": "a9d89ba8-6086-4549-85fc-11808ccfbd27",
+			"key": "drMesirovPractitionerId",
+			"value": ""
+		},
+		{
+			"id": "a11f3fc8-531e-4cfd-84b8-dc736d7c9d82",
+			"key": "drHouseImagingStudyId",
+			"value": ""
+		},
+		{
+			"id": "9c414fe0-d304-43ab-b760-b4a9e1830925",
+			"key": "documentId1",
+			"value": ""
+		},
+		{
+			"id": "7f41f59c-87a2-4d72-b88c-90f8d432de55",
+			"key": "documentId2",
+			"value": ""
+		},
+		{
+			"id": "a00a15f7-9484-43aa-b92b-cafb2c6fb6b1",
+			"key": "documentId3",
+			"value": ""
+		},
+		{
+			"id": "4aaf3b90-6c76-4b61-9878-f08a7b84b052",
+			"key": "documentId4",
+			"value": ""
+		},
+		{
+			"id": "a8129a7f-6cf3-4b8e-9dab-bab00ffb6214",
+			"key": "documentId5",
+			"value": ""
+		},
+		{
+			"id": "47724d06-220d-4d1a-b6a0-67e1a70321a6",
+			"key": "newDeviceIdHouse",
+			"value": ""
+		},
+		{
+			"id": "ab8dcd4f-f63a-41f5-84aa-b290cf09ac87",
+			"key": "newLocationIdHouse",
+			"value": ""
+		},
+		{
+			"id": "5d5dc9d4-8dbe-41cd-b8f7-af68a54fac91",
+			"key": "operatorToken",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IjJaUXBKM1VwYmpBWVhZR2FYRUpsOGxWMFRPSSIsImtpZCI6IjJaUXBKM1VwYmpBWVhZR2FYRUpsOGxWMFRPSSJ9.eyJhdWQiOiIzMWUwYmU5MS0xN2ZlLTQ0ZTktYWI5MS1lY2M2NWIxZDA1ODQiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84MjkxM2Q5MC04NzE2LTQwMjUtYThlOC00ZjhkZmE0MmI3MTkvIiwiaWF0IjoxNjYyMzg2MDY1LCJuYmYiOjE2NjIzODYwNjUsImV4cCI6MTY2MjM5MTExMywiYWNyIjoiMSIsImFpbyI6IkFXUUFtLzhUQUFBQTErVzBnSUpLeEJHWDZBUXpJellxbUpmYkUxd0NQbk12WWt2Y1pUTVJBaVZNeU45UWZlcFpjeGJHYUUwWTBJcitBZk4zVGZXT2JKa1BKOGZBeHBrVHgvK29aeGZJN1hzK083b2xoSGtXU0hHNmw5Vm9MRE5EdGpDVmdoMTdoS2xHIiwiYW1yIjpbIndpYSIsIm1mYSJdLCJhcHBpZCI6IjA0YjA3Nzk1LThkZGItNDYxYS1iYmVlLTAyZjllMWJmN2I0NiIsImFwcGlkYWNyIjoiMCIsImVtYWlsIjoiZGF2aWQua2VsbGVyQHplaXNzLmNvbSIsImlkcCI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0LzI4MDQyMjQ0LWJiNTEtNGNkNi04MDM0LTc3NzZmYTM3MDNlOC8iLCJpcGFkZHIiOiIyMTcuMjM3LjExNC4xMzkiLCJuYW1lIjoiS2VsbGVyLCBEYXZpZCIsIm9pZCI6ImMzMThjNjA1LTQwM2MtNDk1Ny04YjUxLWMzMjY4NTMxNjNiMSIsInJoIjoiMC5BUXNBa0QyUmdoYUhKVUNvNkUtTi1rSzNHWkctNERILUYtbEVxNUhzeGxzZEJZUUxBT1kuIiwic2NwIjoidXNlcl9pbXBlcnNvbmF0aW9uIiwic3ViIjoicFJ0SGMtZnRsek13Y0YwSnB2eVRLdmJyaUVRaFhiWWQ1dzlVcHFXVWRVTSIsInRpZCI6IjgyOTEzZDkwLTg3MTYtNDAyNS1hOGU4LTRmOGRmYTQyYjcxOSIsInVuaXF1ZV9uYW1lIjoiZGF2aWQua2VsbGVyQHplaXNzLmNvbSIsInV0aSI6Im9KSzJ2T2tZa2t5Rl96Q0QyNkZzQUEiLCJ2ZXIiOiIxLjAifQ.dLpdzWK8fwS5S6xIK77A7flXB0boNwdSamN0eqyEH0hygYOXIDz3hXYVU6gNw9ZzZN1PsMsLFT7YUsBJACXELH60Wy3ONaovCCmou65OghJdsklkTDcSo2lXrtMcTBFdD_MqzC_dwFFHVroCHSpmauXy8NMDUQJ8WFHslKjAZntqabO_TLuq0psddAgy_CREGpifD4T_IyUsApcf5SxndOTtpTe9fMH5x7J6j5nDa1d_dCVqki-JhxYnF8KBpPgjvhTWxEXLBb2U43jbRejWP9Hz3pxghBTgyBKoK9m_xHrmdf8TWU0jslyhFS9UHhUNm-okHRSWbCQu_4jzK_0kBg",
+			"type": "string"
+		},
+		{
+			"id": "78efdaf8-8beb-4dc2-b5a4-d0e3c2e22c28",
+			"key": "statusCheckUrl",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"id": "18e387b4-a138-48a5-bdea-577a49616b19",
+			"key": "zeissIdClientIdTest",
+			"value": "b7020ce9-9db6-46f0-b176-5ec94d35b7b0",
+			"type": "default"
+		},
+		{
+			"id": "f4f5a482-bd99-4e3f-9ba0-38d691aa8a0c",
+			"key": "rebeccaAdlerUserEmail",
+			"value": "rebecca-adler@id.zeiss.com",
+			"type": "default"
+		},
+		{
+			"id": "fc95cbb7-7dbe-4927-9a83-d2acd110b527",
+			"key": "rebeccaAdlerUserPwd",
+			"value": "adlerUser123",
+			"type": "default"
+		},
+		{
+			"id": "2a04aec1-119e-47d9-a5eb-10923aa1cf80",
+			"key": "rebeccaAdlerUserToken",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "7f8d65f8-7cac-4a60-8663-e2f51d2ca3b1",
+			"key": "rebeccaAdlerPatientId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "0ea28aba-57c1-4a96-9b27-546af5f16734",
+			"key": "patientLinkCode",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "fe318d2e-e767-411d-adea-b9f0672aa59a",
+			"key": "questionnaireResponseIdForConsent",
+			"value": ""
+		},
+		{
+			"id": "95f372b4-9421-432b-b4a0-d360a5ae0790",
+			"key": "questionnaireId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "dc86190a-cec8-455d-a963-387108cfba95",
+			"key": "AZURE_ACCESS_TOKEN",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiJodHRwczovL2N6bTA5aGRwY2dlbmV1d2Rldm9wc2hjcy5henVyZWhlYWx0aGNhcmVhcGlzLmNvbSIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0LzgyOTEzZDkwLTg3MTYtNDAyNS1hOGU4LTRmOGRmYTQyYjcxOS8iLCJpYXQiOjE2NzQ4MzI0OTcsIm5iZiI6MTY3NDgzMjQ5NywiZXhwIjoxNjc0ODM3MzI0LCJhY3IiOiIxIiwiYWlvIjoiQVdRQW0vOFRBQUFBeE1vSkpkSXp3V1RDWStneWIxRzg2LzlyT21nN2cxRlMvTFJJQVdJSE9taFd3R3VMSkVJYXJvcmt5dlNqTnJpdEtVeGlLVEFBcXJ5WVFCVHhlKzhERVU2MFlPTktTdFAwK1NOWk1mTkIzTUxSYnVOVEhZbDJSbjNGcXlPUWFhMkUiLCJhbHRzZWNpZCI6IjU6OjEwMDMyMDAxRjczMzE0RUMiLCJhbXIiOlsid2lhIiwibWZhIl0sImFwcGlkIjoiMDRiMDc3OTUtOGRkYi00NjFhLWJiZWUtMDJmOWUxYmY3YjQ2IiwiYXBwaWRhY3IiOiIwIiwiZW1haWwiOiJhcnBhZC50b3RoQHplaXNzLmNvbSIsImZhbWlseV9uYW1lIjoiVG90aCIsImdpdmVuX25hbWUiOiJBcnBhZCIsImlkcCI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0LzI4MDQyMjQ0LWJiNTEtNGNkNi04MDM0LTc3NzZmYTM3MDNlOC8iLCJpcGFkZHIiOiIyMTcuMTk3LjE4MC42MCIsIm5hbWUiOiJUb3RoLCBBcnBhZCIsIm9pZCI6ImU3NTM0MjZmLTdhNzQtNGVkOS05NjBiLTg4NTI3ZmI1ZGQ2ZCIsInB1aWQiOiIxMDAzMjAwMUZCMTA2MTg2IiwicmgiOiIwLkFRc0FrRDJSZ2hhSEpVQ282RS1OLWtLM0dkaDRaMF92V3R4RG9mLXdjM0pMbEpVTEFEOC4iLCJzY3AiOiJ1c2VyX2ltcGVyc29uYXRpb24iLCJzdWIiOiI1Vk4yWHNfWi1qNmNSVDIzVE1SUmwySTVQYi1xY2FWYW8zTzVIbTBINC1zIiwidGlkIjoiODI5MTNkOTAtODcxNi00MDI1LWE4ZTgtNGY4ZGZhNDJiNzE5IiwidW5pcXVlX25hbWUiOiJhcnBhZC50b3RoQHplaXNzLmNvbSIsInV0aSI6IlFublJrOVBSOWtTd2Q0N2E5NFEzQUEiLCJ2ZXIiOiIxLjAifQ.QJBKITfwF0dtd0a_Zp0CyG-3agpT7jginXI8lnqBBo_jxrHhuBsOgTvYbTkTibSGfUK8SSYm25LVKZgEU5hTtceFVP3bCu8uWxDLqEu1BgMHr0wCt72KW3Y_52gzsiM-vLyEIuS4IcMWZRci1SX6xWsU3rMuAOU8nUGYg7uWR1EovntwOlmEGM7xS-LXssytq5Z13YEhi26vZuTQwBmcYqD1nZoafHlqnQH7eK5qtfNCbfFWpgMZSQj5AKSuTG-qLQTXh7ygr92q19r0-zr3ExfpQ4Kw063GpiVk3SfTdHaQQSy8t6fldQxDE9cv-XTarAI1S_n1bp_BE9-tQzocuw",
+			"type": "default"
+		},
+		{
+			"id": "339eeeee-6c5e-4023-ab04-5413051ea7f5",
+			"key": "patientFHIRid",
+			"value": "2b8e42a3-e3af-4500-afff-547c1448b4a6"
+		},
+		{
+			"id": "6d77c993-d784-45cf-8325-232178de42a7",
+			"key": "datalakeVersion",
+			"value": "2018-11-09",
+			"type": "default"
+		},
+		{
+			"id": "da3e84a5-51da-406d-a2d3-af0ff86279a9",
+			"key": "datalakeContentType",
+			"value": "application/dicom",
+			"type": "default"
+		},
+		{
+			"id": "153007e7-ca59-412b-9706-0d6656b79ff4",
+			"key": "datalakeContentMD5",
+			"value": "/HcoLhTTh24mpFOAu5ZqmQ==",
+			"type": "default"
+		},
+		{
+			"id": "0d3d20ad-7174-430a-9d95-fe6deef5eee4",
+			"key": "datalakeContentLength",
+			"value": "1985848",
+			"type": "default"
+		},
+		{
+			"id": "d2151357-985d-4e42-a272-820f21d68d36",
+			"key": "datalakeFileId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "2785c4e9-cc23-43ac-b419-6dac4a020678",
+			"key": "datalakeUrl",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "29012938-a923-47a1-9b0b-cef18b9ee796",
+			"key": "technicalPatientId",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
