@@ -1919,6 +1919,34 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "test request",
+					"id": "537a5c55-93f1-42f0-9830-5685bc66e5c1",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{cloudApiUrl}}/fhir/Media?patient={{newPatientIdHouse}}",
+							"host": [
+								"{{cloudApiUrl}}"
+							],
+							"path": [
+								"fhir",
+								"Media"
+							],
+							"query": [
+								{
+									"key": "patient",
+									"value": "{{newPatientIdHouse}}"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"id": "62326a65-e145-4512-9c83-0a4d9cbc39a2"
